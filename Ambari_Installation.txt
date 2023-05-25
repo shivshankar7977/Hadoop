@@ -1,0 +1,260 @@
+*****************************  Ambari Server Installation Using Centos 7 ************************
+
+Machine configuration :
+For master: 
+  RAM : 16GB
+  ROM/Storage : 100 GB
+  Processer : 2+2
+For Worker Node
+  RAM : 8GB
+  ROM/Storage : 100 GB
+  Processer : 1+1
+
+  
+********************
+| Master Machine  |
+********************
+
+# how to login using ssh
+-> ssh user@[ip_address]
+
+# how to change hostname
+-> hostnamectl set-hostname [new_node]
+
+# how to restart bash
+-> exec bash
+
+# how to disable selinux
+    method 1: cd /etc/selinux/conf/
+        -> vi config
+        # change SELINUX=enforcing to disabled
+        -> :wq
+    method 2: using sed command
+        -> sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+        
+    # Check ip ip_address
+    -> ip a
+    if didn't showing then run the -> ifup ens33 command or do the on off -> nmcli n off then -> nmcli n on
+# how to add machines to /etc/hosts
+-> sed -i '$s/$/\n192.168.20.163 master master.shiv.com/' /etc/hosts
+-> sed -i '$s/$/\n192.168.20.164 node1 node1.shiv.com/' /etc/hosts
+-> sed -i '$s/$/\n192.168.20.165 node2 node2.shiv.com/' /etc/hosts
+
+# how to disable firewall
+-> systemctl stop firewalld
+-> systemctl disable firewalld
+-> systemctl status firewalld
+
+# how to perfom key-less ssh(optional)
+    # generate the key-ssh
+    -> ssh-keygen
+    # copy the public key to node1 & node2
+    -> ssh-copy-id root@node1
+        # Enter-password : 
+
+    -> ssh-copy-id root@node2
+        # Enter-password : 
+    
+# sync the hosts files to node1 and node2
+-> rsync [file_to_be_copied] user@[ip]:[path where file has to be copied]
+-> rsync /etc/hosts root@node1:/etc/hosts
+-> rsync /etc/hosts root@node2:/etc/hosts
+
+
+ ***********
+| IN Node 1  |
+ ***********
+
+# how to change hostname
+-> hostnamectl set-hostname node1
+
+# how to restart bash
+-> exec bash
+
+# how to disable selinux
+    method 1: cd /etc/selinux/conf/
+        -> vi config
+        # change SELINUX=enforcing to disabled
+        -> :wq
+    method 2: using sed command
+        -> sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+
+# how to disable firewall
+-> systemctl stop firewalld
+-> systemctl disable firewalld
+-> systemctl status firewalld
+
+ ****************
+|IN  Node 2  |
+ ****************
+
+# how to change hostname
+-> hostnamectl set-hostname node2
+
+# how to restart bash
+-> exec bash
+
+# how to disable selinux
+    method 1: cd /etc/selinux/conf/
+        -> vi config
+        # change SELINUX=enforcing to disabled
+        -> :wq
+    method 2: using sed command
+        -> sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+
+# how to disable firewall
+-> systemctl stop firewalld
+-> systemctl disable firewalld
+-> systemctl status firewalld
+
+
+#####################
+# Creating the Repo #
+#####################
+
+# install the httpd server
+-> yum install -y httpd*
+
+# start the httpd service
+-> systemctl start httpd
+-> systemctl enable httpd
+
+# copy the package file from base os(windows) to Guest OS(Centos) using winscp to downloads
+
+# extract the file to the location /var/www/html
+-> cd /var/www/html
+-> tar -xvf /root/Downloads/[ambari]
+-> tar -xvf /root/Downloads/[HDP]
+-> tar -xvf /root/Downloads/[HDP-UTILS]
+
+# Create a repo from these folder
+-> createrepo ambari/
+-> createrepo HDP/
+-> createrepo HDP-UTILS/
+
+# copy the repo file created in previous step to /etc/yum.repos.d/
+-> cp ./[path]/ambari.repo /etc/yum.repos.d/ 
+-> cp ./[path]/hdp.repo /etc/yum.repos.d/ 
+
+# edit the repofiles
+-> cd /etc/yum.repos.d/
+-> vi ambari.repo
+    # baseurl=[FQDN]/[path]
+    # gpgcheck=0
+-> vi hdp.repo
+    # baseurl=[FQDN]/[path]
+    # gpgcheck=0
+
+# sync these files to node1 and node2
+-> rsync ./ambari.repo ./hdp.repo root@node1:/etc/yum.repos.d/
+-> rsync ./ambari.repo ./hdp.repo root@node2:/etc/yum.repos.d/
+ 
+
+################################
+# Installing the Hadoop server #
+################################
+
+ ---------
+| master  |
+ ---------
+# install the ambari-server
+-> yum install -y ambari-server.x86_64
+
+# setup the ambari-server
+-> ambari-server setup -s
+
+# update the javascript file
+    -> go to line no 39889
+    /**
+       * Use Local Repo if some network issues exist
+       */
+      onNetworkIssuesExist: function () {
+        if (this.get('networkIssuesExist')) {
+          this.get('content.stacks').forEach(function (stack) {
+              stack.setProperties({
+                usePublicRepo: false,
+                useLocalRepo: true
+              });
+              stack.cleanReposBaseUrls();
+          });
+        }
+      }.observes('networkIssuesExist'),
+
+    -----
+     to
+    -----
+
+      /**
+       * Use Local Repo if some network issues exist
+       */
+      onNetworkIssuesExist: function () {
+        if (this.get('networkIssuesExist')) {
+          this.get('content.stacks').forEach(function (stack) {
+            if(stack.get('useLocalRepo') != true){
+              stack.setProperties({
+                usePublicRepo: false,
+                useLocalRepo: true
+              });
+              stack.cleanReposBaseUrls();
+            } 
+          });
+        }
+      }.observes('networkIssuesExist'),
+
+# start the ambari server
+-> ambari-server start 
+
+# installing the ambari-agent on the node1 and node2
+-> yum install -y ambari-agent.x86_64
+
+# update the ambari-agent config file
+-> sed -i 's/hostname=localhost/hostname=master.shiv.com/g' /etc/ambari-agent/conf/ambari-agent.ini
+
+# start the ambari-agent
+-> ambari-agent start
+
+ ---------
+| node 1  |
+ ---------
+# installing the ambari-agent on the node1 and node2
+-> yum install -y ambari-agent.x86_64
+
+# update the ambari-agent config file
+-> sed -i 's/hostname=localhost/hostname=master.shiv.com/g' /etc/ambari-agent/conf/ambari-agent.ini
+
+# start the ambari-agent
+-> ambari-agent start
+
+ ---------
+| node 2  |
+ ---------
+# installing the ambari-agent on the node1 and node2
+-> yum install -y ambari-agent.x86_64
+
+# update the ambari-agent config file
+-> sed -i 's/hostname=localhost/hostname=master.shiv.com/g' /etc/ambari-agent/conf/ambari-agent.ini
+
+# start the ambari-agent
+-> ambari-agent start
+
+
+
+*****Steps for editing java script file***
+Download the mysql-connector-j-8.0.33-1.e17.noarch.rpm file from the ambari web UI 
+it will showingin Downloads folder
+
+extract this file by -> rpm -i /home/shiv/Downloads/mysql-connector-j-8.0.33-1.e17.noarch.rpm
+
+ambari-server setup --jdbc-db-mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+ then go to the path 
+ -> cd /usr/lib/ambari-server/web/javascripts
+and take the backup of app.js file
+-> cp app.js app.js_backups
+
+then edit the app.js file using vim 
+
+ vim app.js 
+ then do the steps in line number 167 to 202
+
+
+
