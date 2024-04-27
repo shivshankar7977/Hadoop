@@ -1,0 +1,40 @@
+capture click Streams -> analysis -> generate history -> capture habits
+
+Dug Cutting -> hired by yahoo | got inspired by GFS and created DFS(Distributed file systesm)
+2003 -> GFS(Google File system)
+
+MAP Reduce -> Distributed Processing
+MAP Reduce + DFS = Hadoop
+
+developed by Yahoo
+
+Hadoop can have 40K machines in single cluster
+
+Problem : Big Data
+Solution : Hadoop
+
+
+Big Data Vendors
+1. Cloudera
+2. Hortonworks
+3. AWS EMR Hadoop Distribution
+4. Microsoft (HDInsight)
+5. mapR
+6. IBM : infosphere Insights (BigInsight)
+
+Linux Licenses
+1. OSDL : 
+2. GNU/GPL : General purpose Linux
+
+hadoop (2007) -> ASF(apache foundation,2007) 
+
+cloudera Hadoop Distribution :
+UI Framework: Hue
+SDK : Hue SDK
+WorkFlow : Oozie
+Scheduling : 
+Metadata : Hive
+Data Integration : Flume,Sqoop
+
+
+
