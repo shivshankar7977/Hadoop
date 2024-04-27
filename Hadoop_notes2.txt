@@ -1,0 +1,24 @@
+# cofiguring rack awareness
+# purpose : to maintain higher availablity of the data, just in case one data node fails
+-> increase HDFS availablity
+-> better cluster performance
+
+
+by default,HDFS and YARN are not rack awareness
+-> rack awareness : knowledge of which nodes are installed on which racks
+-> this awareness has to be configured manually
+
+# how to check how many computer nodes are connected to the namenode
+-> hdfs dfsadmin -report
+-> hdfs fsck -racks
+-> hdfs fsck -locations
+
+# hdfs and yarn server should know about the server racks we have connected physically!
+# how to inform hdfs and yarn about the physical racks
+
+
+how to perform rack awareness
+1. Executable python scripts
+2. Mapping file
+
+Lab No: 9
