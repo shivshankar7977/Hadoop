@@ -1,3 +1,5 @@
+HADOOP NOTES
+
 capture click Streams -> analysis -> generate history -> capture habits
 
 Dug Cutting -> hired by yahoo | got inspired by GFS and created DFS(Distributed file systesm)
