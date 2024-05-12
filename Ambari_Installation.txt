@@ -1,4 +1,4 @@
-*****************************  Ambari Server Installation Using Centos 7 ************************
+*****************************  Ambari Server Installation Using Centos 7 *****************************
 
 Machine configuration :
 For master: 
