@@ -1,4 +1,4 @@
-HADOOP NOTES
+#########################      HADOOP NOTES     ###################################
 
 capture click Streams -> analysis -> generate history -> capture habits
 
