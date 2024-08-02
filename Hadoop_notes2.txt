@@ -1,4 +1,6 @@
-HADOOP NOTES
+
+
++++HADOOP NOTES++++
 
 # cofiguring rack awareness
 # purpose : to maintain higher availablity of the data, just in case one data node fails
